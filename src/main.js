@@ -8,10 +8,11 @@ import '@/styles/index.less'
 
 // 引入路由
 import router from '@/router/index.js'
+// 让Vue使用element-ui
+Vue.use(ElementUI)
 
 Vue.config.productionTip = false
-// 使用element-UI
-Vue.use(ElementUI)
+
 new Vue({
   // 注入
   router,

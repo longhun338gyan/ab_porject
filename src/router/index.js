@@ -5,12 +5,13 @@ import VueRouter from 'vue-router'
 
 // 引入登陆组件
 import Login from '@/views/login.vue'
+import Home from '@/views/home.vue'
 
 // 使用
 Vue.use(VueRouter)
 // 创建路由对象
 var router = new VueRouter({
-  roues: [
+  routes: [
     { name: 'default',
       path: '/',
       redirect: { name: 'login' }
@@ -19,6 +20,11 @@ var router = new VueRouter({
       name: 'login',
       path: '/login',
       component: Login
+    },
+    {
+      name: 'home',
+      path: '/home',
+      component: Home
     }
   ]
 })
