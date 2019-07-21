@@ -46,6 +46,9 @@ export default {
             .then((res) => {
               console.log(res)
               if (res.data.meta.status === 200) {
+                // 路由跳转之后先保存token到本地存储
+                localStorage.setItem('ab_project_token', res.data.data.toekn)
+                // 进行路由跳转
                 this.$router.push({ name: 'home' })
               } else {
                 this.$message({

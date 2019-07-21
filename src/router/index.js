@@ -6,6 +6,7 @@ import VueRouter from 'vue-router'
 // 引入登陆组件
 import Login from '@/views/login.vue'
 import Home from '@/views/home.vue'
+import Welcome from '@/views/welcome.vue'
 
 // 使用
 Vue.use(VueRouter)
@@ -24,7 +25,15 @@ var router = new VueRouter({
     {
       name: 'home',
       path: '/home',
-      component: Home
+      component: Home,
+      redirect: { name: 'welcome' },
+      children: [
+        {
+          name: 'welcome',
+          path: '/welcome',
+          component: Welcome
+        }
+      ]
     }
   ]
 })
