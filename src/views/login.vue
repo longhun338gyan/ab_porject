@@ -12,7 +12,7 @@
         </el-form-item>
 
         <el-form-item prop="password">
-          <el-input v-model="loginForm.password" prefix-icon="myicon myicon-key" placeholder=" 密码"></el-input>
+          <el-input v-model="loginForm.password" prefix-icon="myicon myicon-key" placeholder=" 密码" @keyup.enter.native='login'></el-input>
         </el-form-item>
 
         <el-form-item>
@@ -47,7 +47,8 @@ export default {
               console.log(res)
               if (res.data.meta.status === 200) {
                 // 路由跳转之后先保存token到本地存储
-                localStorage.setItem('ab_project_token', res.data.data.toekn)
+                console.log(res.data.data.token)
+                localStorage.setItem('ab_project_token', res.data.data.token)
                 // 进行路由跳转
                 this.$router.push({ name: 'home' })
               } else {

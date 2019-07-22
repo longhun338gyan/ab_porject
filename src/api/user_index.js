@@ -9,3 +9,9 @@ export const login = (data) => {
     data
   })
 }
+export const getAllUserList = (params) => {
+  return axios({
+    url: 'users',
+    params
+  })
+}

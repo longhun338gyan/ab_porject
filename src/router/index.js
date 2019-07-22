@@ -7,6 +7,7 @@ import VueRouter from 'vue-router'
 import Login from '@/views/login.vue'
 import Home from '@/views/home.vue'
 import Welcome from '@/views/welcome.vue'
+import Users from '@/views/users/user.vue'
 
 // 使用
 Vue.use(VueRouter)
@@ -22,6 +23,7 @@ var router = new VueRouter({
       path: '/login',
       component: Login
     },
+
     {
       name: 'home',
       path: '/home',
@@ -32,10 +34,16 @@ var router = new VueRouter({
           name: 'welcome',
           path: '/welcome',
           component: Welcome
+        },
+        {
+          name: 'users',
+          path: 'users',
+          component: Users
         }
       ]
     }
   ]
 })
+
 // 暴露路由
 export default router
