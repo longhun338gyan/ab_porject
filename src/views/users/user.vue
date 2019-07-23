@@ -29,8 +29,12 @@
       <el-table-column prop="mobile" label="电话"></el-table-column>
       <el-table-column label="状态" width="120">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"
-          @change="changeState(scope.row.id,scope.row.mg_state)"></el-switch>
+          <el-switch
+            v-model="scope.row.mg_state"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            @change="changeState(scope.row.id,scope.row.mg_state)"
+          ></el-switch>
         </template>
       </el-table-column>
       <el-table-column label="操作">
@@ -39,7 +43,7 @@
             <el-button type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="分配角色" placement="top-end">
-            <el-button type="primary" icon="el-icon-s-custom"></el-button>
+            <el-button type="primary" icon="el-icon-s-custom" @click="showGrantDialog(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="删除" placement="top-end">
             <el-button type="primary" icon="el-icon-delete" @click="del(scope.row.id)"></el-button>
@@ -59,7 +63,7 @@
     ></el-pagination>
     <!-- 添加用户对话框 -->
     <el-dialog title="添加用户" :visible.sync="adddialogFormVisible">
-       <el-form :model="addform"  ref='addform'  :label-width="'80px'" :rules='rules'>
+      <el-form :model="addform" ref="addform" :label-width="'80px'" :rules="rules">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="addform.username" autocomplete="off"></el-input>
         </el-form-item>
@@ -79,10 +83,10 @@
       </div>
     </el-dialog>
     <!-- 编辑用户对话框 -->
-        <el-dialog title="编辑用户" :visible.sync="editdialogFormVisible">
-       <el-form :model="editform"  ref='editform'  :label-width="'80px'" :rules='rules'>
-        <el-form-item label="用户名" >
-          <el-input v-model="editform.username" autocomplete="off"></el-input>
+    <el-dialog title="编辑用户" :visible.sync="editdialogFormVisible">
+      <el-form :model="editform" ref="editform" :label-width="'80px'" :rules="rules">
+        <el-form-item label="用户名">
+          <el-input v-model="editform.username" autocomplete="off" disabled></el-input>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="editform.email" autocomplete="off"></el-input>
@@ -96,14 +100,50 @@
         <el-button type="primary" @click="editsubmit">确 定</el-button>
       </div>
     </el-dialog>
-
+    <!-- 角色分配对话框 -->
+    <el-dialog title="分配角色" :visible.sync="grantdialogFormVisible">
+      <el-form :model="grantform">
+        <el-form-item label="用户名:">
+          <span>{{grantform.username}}</span>
+        </el-form-item>
+        <el-form-item label="选择角色:">
+          <el-select v-model="grantform.rid" clearable placeholder="请选择">
+            <el-option
+              v-for="item in roleList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="grantdialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="grantrole">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
-import { getAllUserList, addUser, editUser, delUserById, updateUserState } from '@/api/user_index.js'
+import {
+  getAllUserList,
+  addUser,
+  editUser,
+  delUserById,
+  updateUserState,
+  grantUserRole
+} from '@/api/user_index.js'
+import { getAllRolelist } from '@/api/role_index.js'
 export default {
   data () {
     return {
+      roleList: [],
+      grantdialogFormVisible: false,
+      grantform: {
+        id: '',
+        rid: '',
+        username: 'jack'
+      },
 
       adddialogFormVisible: false,
       editform: {
@@ -129,24 +169,75 @@ export default {
       },
       userList: [],
       rules: {
-        username: [{
-          required: true, message: '请输入用户名', trigger: 'blur'
-        }],
-        password: [{
-          required: true, message: '请输入密码', trigger: 'blur'
-        }],
-        email: [{
-          required: true, message: '邮箱', trigger: 'blur'
-        },
-        { pattern: /\w+[@]\w+[.]+/, message: '邮箱格式不正确', trigger: 'blur' }],
-        mobile: [{
-          required: true, message: '电话', trigger: 'blur'
-        },
-        { pattern: /^1\d{10}$/, message: '输入合法的手机', trigger: 'blur' }]
+        username: [
+          {
+            required: true,
+            message: '请输入用户名',
+            trigger: 'blur'
+          }
+        ],
+        password: [
+          {
+            required: true,
+            message: '请输入密码',
+            trigger: 'blur'
+          }
+        ],
+        email: [
+          {
+            required: true,
+            message: '邮箱',
+            trigger: 'blur'
+          },
+          {
+            pattern: /\w+[@]\w+[.]+/,
+            message: '邮箱格式不正确',
+            trigger: 'blur'
+          }
+        ],
+        mobile: [
+          {
+            required: true,
+            message: '电话',
+            trigger: 'blur'
+          },
+          { pattern: /^1\d{10}$/, message: '输入合法的手机', trigger: 'blur' }
+        ]
       }
     }
   },
   methods: {
+    showGrantDialog (row) {
+      this.grantdialogFormVisible = true
+      this.grantform.id = row.id
+      this.grantform.username = row.username
+      this.grantform.rid = row.rid
+    },
+    async roleListInit () {
+      let res = await getAllRolelist()
+      this.roleList = res.data.data
+    },
+    async grantrole () {
+      // console.log(this.grantform)
+      if (!this.grantform.rid) {
+        this.$message({
+          type: 'warning',
+          message: '选择一个角色'
+
+        })
+      } else {
+        let res = await grantUserRole(this.grantform)
+        console.log(res)
+        if (res.data.meta.status === 200) {
+          this.$message({
+            type: 'success',
+            message: '角色设置成功'
+          })
+          this.grantdialogFormVisible = false
+          this.init()
+        }
+      }
+    },
     // 修改用户状态
     async changeState (id, type) {
       let res = await updateUserState(id, type)
@@ -163,32 +254,39 @@ export default {
         confirmButtonText: '确定', // 指定按钮文本
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => {
-        delUserById(id)
-          .then(res2 => {
-            if (res2.data.meta.status === 200) {
-              this.$message({
-                type: 'success',
-                message: '删除成功'
-              })
-              this.userobj.pagenum = Math.ceil((this.total - 1) / this.userobj.pagesize) ? --this.userobj.pagenum : this.userobj.pagenum
-
-              this.init()
-            }
-          }).catch(err2 => {
-            console.log(err2)
-          })
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消删除'
-        })
       })
+        .then(() => {
+          delUserById(id)
+            .then(res2 => {
+              if (res2.data.meta.status === 200) {
+                this.$message({
+                  type: 'success',
+                  message: '删除成功'
+                })
+                this.userobj.pagenum = Math.ceil(
+                  (this.total - 1) / this.userobj.pagesize
+                )
+                  ? --this.userobj.pagenum
+                  : this.userobj.pagenum
+
+                this.init()
+              }
+            })
+            .catch(err2 => {
+              console.log(err2)
+            })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
     },
     // 编辑提交
     async editsubmit () {
       let res = await editUser(this.editform)
-      console.log(res)
+      // console.log(res)
       if (res.data.meta.status === 200) {
         this.$message({
           type: 'success',
@@ -204,28 +302,7 @@ export default {
         })
       }
     },
-    async editsubmit () {
-    // await：必须写在async函数内
-      let res = await editUser(this.editform)
-      console.log(res)
-      if (res.data.meta.status === 200) {
-        this.$message({
-          type: 'success',
-          message: '数据编辑成功'
-        })
-        // 隐藏对话框
-        this.editdialogFormVisible = false
-        // 重置表单元素的数据
-        this.$refs.editform.resetFields()
-        // 刷新
-        this.init()
-      } else {
-        this.$message({
-          type: 'error',
-          message: '数据编辑失败'
-        })
-      }
-    },
+
     // 显示编辑对话框
     showEditDialog (row) {
       this.editdialogFormVisible = true
@@ -242,7 +319,7 @@ export default {
           // 调用接口方法
           addUser(this.addform)
             .then(res => {
-              console.log(res)
+              // console.log(res)
               if (res.data.meta.status === 201) {
                 this.$message({
                   type: 'success',
@@ -281,7 +358,7 @@ export default {
     init () {
       getAllUserList(this.userobj)
         .then(res => {
-          console.log(res)
+          // console.log(res)
           if (res.data.meta.status === 200) {
             this.userList = res.data.data.users
             this.total = res.data.data.total
@@ -294,6 +371,7 @@ export default {
   },
   mounted () {
     this.init()
+    this.roleListInit()
   }
 }
 </script>
